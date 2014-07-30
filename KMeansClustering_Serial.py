@@ -31,11 +31,37 @@ class DataPoint:
     
     #def __eq__(self,other):
         #return self.tuple == other.tuple
-        
+
+#Calculate Eculedian Distance 
+def calculateEculedianDistance(centroid, datapoint):
+    return py.sqrt(sum((centroid - datapoint) ** 2))
+    
+    
+def kMeansAlgo(clusterList, threshold):
+    for i in range(len(clusterList)): #Iteration over the Cluster
+        currentCluster = Cluster (clusterList[i])
+        for index in range(len(currentCluster.pointsandDistance)): #Iteration over each points in that Cluster Dictionary
+            distCurrentCluster = calculateEculedianDistance(currentCluster.centroid,currentCluster.pointsandDistance[i])
+            for j in range(i-1, 0): #Iterate over the previous List 
+                prevCluster = Cluster (clusterList[j])
+                prevHashTable = {}
+                prevHashTable = prevCluster.pointsandDistance
+                if(prevHashTable.has_key(prevCluster.pointsandDistance[index])):
+                    if(distCurrentCluster > prevHashTable.get(prevCluster.pointsandDistance[index]) or 
+                       distCurrentCluster == prevHashTable.get(prevCluster.pointsandDistance[index]) or
+                       distCurrentCluster <= threshold):
+                        dict(currentCluster.pointsandDistance).pop(currentCluster.pointsandDistance[index])
+                       
+                        
+                    
+                
+                
+                    
+ 
         
         
 #Generate Random Data 
-def fireUp(lowerBound, upperBound, maxPoints, numClusters):
+def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold):
     dataCollection = []
     for i in range(1, maxPoints):
         dataCollection.append(DataPoint([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
@@ -54,7 +80,21 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters):
         ListofHashtableofDataPoints.append(copy.deepcopy(tempHashTable));
          
     print ListofHashtableofDataPoints
+    
+    #Get three random Centriods
+    initialCentroids = random.sample(dataCollection, numClusters)
+    print initialCentroids
+    
+    #numClusters will automatically ensure that the size of ListofHashtableofDataPoints and initialCentroids is same.
+    clusterList = []
+    for i in range(len(ListofHashtableofDataPoints)):
+        clusterList.append(Cluster(initialCentroids[i], ListofHashtableofDataPoints[i]));
         
+    print clusterList
+
+    #Calling the KMeans Algorithm
+    '''kMeansAlgo(clusterList, threshold)'''
+    
     '''
     # Experimental Code to Learn Python
     x = {}
@@ -69,19 +109,7 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters):
     c.getCurrentCentroid()    
     print dataCollection[0]
     '''
-    
-    #Get three random Centroids
-    initialCentroids = random.sample(dataCollection, numClusters)
-    print initialCentroids
-    
-    
-    #numClusters will automatically ensure that the size of ListofHashtableofDataPoints and initialCentroids is same.
-    clusterList = []
-    for i in range(len(ListofHashtableofDataPoints)):
-        clusterList.append(Cluster(initialCentroids[i], ListofHashtableofDataPoints[i]));
-    print clusterList
-        
-    
+
     
 def main():
     #numDimensions = int (raw_input("Enter number of Dimensions N:\n"))
@@ -89,6 +117,8 @@ def main():
     upperBound = 2 #int (raw_input("Enter the upperBound for DataGenerationN: \n"))
     maxPoints = 10 #int (raw_input("Enter the maxPoints for DataGenerationN:\n"))
     numClusters = 3 #int (raw_input("Enter the number of Clusters :\n")) 
+    threshold = 0.2
+    
     fireUp(lowerBound, upperBound, maxPoints, numClusters)
     
 if __name__ == "__main__":

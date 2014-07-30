@@ -2,12 +2,11 @@ import random
 import numpy as py
 import copy
 
-# Reference for KMean Algorithm 
-# http://datasciencelab.wordpress.com/2013/12/12/clustering-with-k-means-in-python/
+#KMean Serialized Algorithm 
 
 #This is a logical abstraction of Cluster.
 class Cluster: 
-    # Centroid of that Cluster
+    # Centriod of that Cluster
     # HashTable containing a mapping between points and the distances 
     def __init__(self, dataPoint, pointsandDistance = {}):
         self.centroid = dataPoint
@@ -16,7 +15,8 @@ class Cluster:
     def getCurrentCentroid(self):
         print "Current centroid for this cluster is - ", self.centroid  
         
-        
+    def __repr__(self):
+        return '%s %s' % (self.centroid, self.pointsandDistance)
         
 #This is a logical abstraction of a Point
 class DataPoint:
@@ -25,7 +25,7 @@ class DataPoint:
         self.tuple = tuple
     
     #Method to be able to print the Tuple 
-    #Reference: http://stackoverflow.com/questions/1984162/purpose-of-pythons-repr
+    '''Reference: http://stackoverflow.com/questions/1984162/purpose-of-pythons-repr'''
     def __repr__(self):
         return '%s' % self.tuple
     
@@ -33,24 +33,26 @@ class DataPoint:
         #return self.tuple == other.tuple
         
         
-    
+        
 #Generate Random Data 
-def generatorNumbers(lowerBound, upperBound, maxPoints, numClusters):
+def fireUp(lowerBound, upperBound, maxPoints, numClusters):
     dataCollection = []
     for i in range(1, maxPoints):
         dataCollection.append(DataPoint([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
         
-        
     #Creating Dictionaries for each of the Clusters. Since they need to operate on that    
     ListofHashtableofDataPoints = []
     
+    '''Created a HashTable with the Points and Distance set to ZERO'''
     tempHashTable = {}
     for i in range(len(dataCollection)):
-        tempHashTable.update({dataCollection[i]:0})
+        tempHashTable.update({dataCollection[i]:0}) 
     
+    
+    '''Deep Copy to Make as many copies as the Number of Clusters we need'''
     for i in range(numClusters):
         ListofHashtableofDataPoints.append(copy.deepcopy(tempHashTable));
-        
+         
     print ListofHashtableofDataPoints
         
     '''
@@ -67,17 +69,19 @@ def generatorNumbers(lowerBound, upperBound, maxPoints, numClusters):
     c.getCurrentCentroid()    
     print dataCollection[0]
     '''
+    
+    #Get three random Centroids
+    initialCentroids = random.sample(dataCollection, numClusters)
+    print initialCentroids
+    
+    
+    #numClusters will automatically ensure that the size of ListofHashtableofDataPoints and initialCentroids is same.
+    clusterList = []
+    for i in range(len(ListofHashtableofDataPoints)):
+        clusterList.append(Cluster(initialCentroids[i], ListofHashtableofDataPoints[i]));
+    print clusterList
         
-    '''clusterList = []
-    initialCentroids = py.random.sample(dataCollection, numClusters)
     
-    for randomPoint in initialCentroids:
-        clusterList.append(object)
-    
-    for i in range(numClusters):
-         clusterList.append(py.random.sample(dataCollection))
-         
-    print clusterList'''
     
 def main():
     #numDimensions = int (raw_input("Enter number of Dimensions N:\n"))
@@ -85,7 +89,7 @@ def main():
     upperBound = 2 #int (raw_input("Enter the upperBound for DataGenerationN: \n"))
     maxPoints = 10 #int (raw_input("Enter the maxPoints for DataGenerationN:\n"))
     numClusters = 3 #int (raw_input("Enter the number of Clusters :\n")) 
-    generatorNumbers(lowerBound, upperBound, maxPoints, numClusters)
+    fireUp(lowerBound, upperBound, maxPoints, numClusters)
     
 if __name__ == "__main__":
     main()

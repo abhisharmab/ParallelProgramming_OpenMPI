@@ -37,28 +37,42 @@ def calculateEculedianDistance(centroid, datapoint):
     return py.sqrt(sum((centroid - datapoint) ** 2))
     
     
-def kMeansAlgo(clusterList, threshold):
-    for i in range(len(clusterList)): #Iteration over the Cluster
-        currentCluster = Cluster (clusterList[i])
-        for index in range(len(currentCluster.pointsandDistance)): #Iteration over each points in that Cluster Dictionary
-            distCurrentCluster = calculateEculedianDistance(currentCluster.centroid,currentCluster.pointsandDistance[i])
-            for j in range(i-1, 0): #Iterate over the previous List 
-                prevCluster = Cluster (clusterList[j])
-                prevHashTable = {}
-                prevHashTable = prevCluster.pointsandDistance
-                if(prevHashTable.has_key(prevCluster.pointsandDistance[index])):
-                    if(distCurrentCluster > prevHashTable.get(prevCluster.pointsandDistance[index]) or 
-                       distCurrentCluster == prevHashTable.get(prevCluster.pointsandDistance[index]) or
-                       distCurrentCluster <= threshold):
-                        dict(currentCluster.pointsandDistance).pop(currentCluster.pointsandDistance[index])
+def kMeansAlgo(clusterList, threshold, flag, Max_Iterations):
+    oldCentroids = py.array([Cluster(clusterList[i]).centroid for i in range(len(clusterList))])
+    newCentroids = py.array([Cluster(clusterList[i]).centroid for i in range(len(clusterList))])
+    iterations = 0;
+    
+    while not shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
+        iterations += 1
+        for i in range(len(clusterList)):  # Iteration over the Cluster
+            currentCluster = Cluster (clusterList[i])
+            for index in range(len(currentCluster.pointsandDistance)):  # Iteration over each points in that Cluster Dictionary
+                distCurrentCluster = calculateEculedianDistance(currentCluster.centroid, currentCluster.pointsandDistance[index])
+                dict(currentCluster.pointsandDistance).update({currentCluster.pointsandDistance[index] : distCurrentCluster})
+                for j in range(i - 1, 0):  # Iterate over the previous List 
+                    prevCluster = Cluster(clusterList[j])
+                    prevHashTable = {}
+                    prevHashTable = prevCluster.pointsandDistance
+                    if(prevHashTable.has_key(prevCluster.pointsandDistance[index])):
+                        if(distCurrentCluster > prevHashTable.get(prevCluster.pointsandDistance[index]) and distCurrentCluster >= threshold):
+                            dict(currentCluster.pointsandDistance).pop(currentCluster.pointsandDistance[index])
+                            break
+                        elif(distCurrentCluster == prevHashTable.get(prevCluster.pointsandDistance[index])):
+                            dict(currentCluster.pointsandDistance).pop(currentCluster.pointsandDistance[index])
+                            break
+                        elif((distCurrentCluster > prevHashTable.get(prevCluster.pointsandDistance[index]) and distCurrentCluster <= threshold)
+                             or (distCurrentCluster < prevHashTable.get(prevCluster.pointsandDistance[index]))):
+                            dict(prevCluster.pointsandDistance).pop(prevCluster.pointsandDistance[index])
+    return True
+       
+                    
                        
+def shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
+    if iterations > Max_Iterations: return  True
+    return oldCentroids == newCentroids
+    
+              
                         
-                    
-                
-                
-                    
- 
-        
         
 #Generate Random Data 
 def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold):
@@ -92,8 +106,9 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold):
         
     print clusterList
 
+    flag = True;
     #Calling the KMeans Algorithm
-    '''kMeansAlgo(clusterList, threshold)'''
+    kMeansAlgo(clusterList, threshold, flag, 1000)
     
     '''
     # Experimental Code to Learn Python
@@ -119,7 +134,7 @@ def main():
     numClusters = 3 #int (raw_input("Enter the number of Clusters :\n")) 
     threshold = 0.2
     
-    fireUp(lowerBound, upperBound, maxPoints, numClusters)
+    fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold)
     
 if __name__ == "__main__":
     main()

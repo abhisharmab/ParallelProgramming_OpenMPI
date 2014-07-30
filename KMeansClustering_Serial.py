@@ -1,5 +1,6 @@
 import random 
 import numpy as py
+import copy
 
 # Reference for KMean Algorithm 
 # http://datasciencelab.wordpress.com/2013/12/12/clustering-with-k-means-in-python/
@@ -31,13 +32,27 @@ class DataPoint:
     #def __eq__(self,other):
         #return self.tuple == other.tuple
         
+        
     
 #Generate Random Data 
-def generatorNumbers(lowerBound, upperBound, maxPoints):
+def generatorNumbers(lowerBound, upperBound, maxPoints, numClusters):
     dataCollection = []
     for i in range(1, maxPoints):
         dataCollection.append(DataPoint([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
+        
+        
+    #Creating Dictionaries for each of the Clusters. Since they need to operate on that    
+    ListofHashtableofDataPoints = []
     
+    tempHashTable = {}
+    for i in range(len(dataCollection)):
+        tempHashTable.update({dataCollection[i]:0})
+    
+    for i in range(numClusters):
+        ListofHashtableofDataPoints.append(copy.deepcopy(tempHashTable));
+        
+    print ListofHashtableofDataPoints
+        
     '''
     # Experimental Code to Learn Python
     x = {}
@@ -51,8 +66,18 @@ def generatorNumbers(lowerBound, upperBound, maxPoints):
             print "even better"
     c.getCurrentCentroid()    
     print dataCollection[0]
-    
     '''
+        
+    '''clusterList = []
+    initialCentroids = py.random.sample(dataCollection, numClusters)
+    
+    for randomPoint in initialCentroids:
+        clusterList.append(object)
+    
+    for i in range(numClusters):
+         clusterList.append(py.random.sample(dataCollection))
+         
+    print clusterList'''
     
 def main():
     #numDimensions = int (raw_input("Enter number of Dimensions N:\n"))
@@ -60,7 +85,7 @@ def main():
     upperBound = 2 #int (raw_input("Enter the upperBound for DataGenerationN: \n"))
     maxPoints = 10 #int (raw_input("Enter the maxPoints for DataGenerationN:\n"))
     numClusters = 3 #int (raw_input("Enter the number of Clusters :\n")) 
-    generatorNumbers(lowerBound, upperBound, maxPoints)
+    generatorNumbers(lowerBound, upperBound, maxPoints, numClusters)
     
 if __name__ == "__main__":
     main()

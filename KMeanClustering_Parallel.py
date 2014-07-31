@@ -12,6 +12,7 @@ comm = MPI.COMM_WORLD
 machineNumber = comm.Get_rank()
 sizeofCluster = comm.Get_size()
 nameofMachine = MPI.Get_processor_name()
+MPI_GOD = 0
 
 #Stuff Everyone Needs to Know about is Here
 tempHashTable = {} #HashTable that has all points and distances initialized to zero.
@@ -20,7 +21,6 @@ numClusters = 0
 maxIterations = 0
 threshold = 0
 localclusterList=[]
-
 globalclusterList=[] #Maybe we might need this
 
 
@@ -42,22 +42,50 @@ class Cluster:
     def __repr__(self):
         return '%s %s' % (self.centroid, self.pointsandDistance)
 
-def kMeansParallelAlgo():
-    print "I am minion %d of %d on %s" % (machineNumber, sizeofCluster, nameofMachine)
 
+'''System Initialization'''
+def initializeDistributedSystem():
+    print "System Initializing. Please wait....."
+    if(comm.Get_rank() == MPI_GOD):
+        #Send the Data to Minions and Also Take Up Some Work
+        print x
+        
+    else:
+        #Receive the Data From Master
+        print y
+
+
+
+'''K-MEANS Parallel Algorithm'''
+def kMeansParallelAlgo():
+    try:
+        print "I am minion %d of %d on %s" % (machineNumber, sizeofCluster, nameofMachine)
+        
+        initializeDistributedSystem()
+    except Exception:
+        print Exception.message
+
+
+
+'''Fire_Up Function'''
 #Generate Random Data First
 def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations):
     dataCollection = []
     for i in range(maxPoints):
         dataCollection.append(tuple([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
     
-    '''Created a HashTable with the Points and Distance set to ZERO'''
+    #Created a HashTable with the Points and Distance set to ZERO
     for i in range(len(dataCollection)):
         tempHashTable.update({dataCollection[i]:0}) 
         
+    #Get three random Centriods
+    initialCentroids = random.sample(dataCollection, numClusters)
     
+    
+
+'''Main Function for User_Input'''
 def main():
-    if(comm.Get_rank() ==0):
+    if(comm.Get_rank() == 0):
         while True:
             try:
                 print "I am boss %d of %d on %s" % (machineNumber, sizeofCluster, nameofMachine)
@@ -73,7 +101,7 @@ def main():
                 print "Oops! Invalid Entry. Please follow instructions carefully. Try again..\n"
     
         #Fire-Up our Working Code
-        #fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations)
+        fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations)
     
     #Calling the KMeans Algorithm
     kMeansParallelAlgo()    

@@ -114,7 +114,8 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
             writer.writerow(['Cluster_%s' %index , point])      
             
         print "\n"    
-            
+        
+    print "Done!!! All information pushed to a CSV file in the same directory"         
                     
 #Generate Random Data First
 def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations):
@@ -147,12 +148,18 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
     
     
 def main():
-    lowerBound = 1 #int (raw_input("Enter the lowerBound for DataGeneration (int only): \n"))
-    upperBound = 2 #int (raw_input("Enter the upperBound for DataGeneration (int only): \n"))
-    maxPoints = 100 #int (raw_input("Enter the maxPoints for DataGeneration (int only):\n"))
-    numClusters = 3 #int (raw_input("Enter the number of Clusters (int only):\n")) 
-    threshold = 0.15 #float (raw_input("Enter the distance you are ready to accept as threshold from centroid (int or float):\n"))
-    maxIterations = 20000 #int (raw_input("Enter the maximum iterations you want to allow (int only):\n"))
+    while True:
+        try:
+            lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only): \n"))
+            upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only): \n"))
+            maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
+            numClusters = int (raw_input("Enter the number of Clusters (Integer only):\n")) 
+            threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
+            maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
+            break
+        
+        except ValueError:
+            print "Oops! Invalid Entry. Please follow instructions carefully. Try again..\n"
     
     #Fire-Up our Working Code
     fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations)

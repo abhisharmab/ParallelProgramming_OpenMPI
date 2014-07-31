@@ -13,7 +13,7 @@ tempHashTable = {} #This dictionary holds all the Generated Points
 class Cluster: 
     # Centriod of that Cluster
     # HashTable containing a mapping between points and the distances 
-    def __init__(self, dataPoint, pointsandDistance=None):
+    def __init__(self, dataPoint, pointsandDistance):
         self.centroid = dataPoint
         self.pointsandDistance = pointsandDistance
 

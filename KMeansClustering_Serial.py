@@ -3,6 +3,7 @@ import numpy as py
 import copy
 from numpy import matrix
 from numpy import mean
+import csv
 
 #KMean Serialized Algorithm 
 tempHashTable = {} #This dictionary holds all the Generated Points
@@ -38,6 +39,8 @@ def shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
 
 
 def kMeansAlgo(clusterList, threshold, Max_Iterations):
+    
+    #Initialize things we need for Algos
     newCentroids = []
     for cluster in clusterList:
         newCentroids.append(cluster.centroid)
@@ -72,16 +75,16 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
                                 #print "keyToSearchinPrev" , element
                                 if(prevCluster.pointsandDistance.has_key(element)):
                                     if(distCurrentCluster > prevCluster.pointsandDistance.get(element) and distCurrentCluster >= threshold):
-                                        print "We are bigger"
+                                        #print "We are futher"
                                         pointstoDeletefromCurrentCluster.append(element)
                                         break  
                                     elif(distCurrentCluster == prevCluster.pointsandDistance.get(element)):
-                                        print "We are equal"
+                                        #print "We are equidistant" #Just pop from any place
                                         pointstoDeletefromCurrentCluster.append(element)
                                         break
                                     elif((distCurrentCluster > prevCluster.pointsandDistance.get(element) and distCurrentCluster <= threshold)
                                          or (distCurrentCluster < prevCluster.pointsandDistance.get(element))):
-                                        print "Element is smaller or we are good within our threshold"
+                                        #print "We are nearer or well within our threshold_limit"
                                         #print distCurrentCluster
                                         #print prevCluster.pointsandDistance[element]
                                         del prevCluster.pointsandDistance[element]
@@ -92,11 +95,19 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
                             
         for cluster in clusterList:
             cluster.centroid = tuple(map(mean, zip(*cluster.pointsandDistance.keys())))
-            print "Final New Centroid-" , cluster.centroid
-            print "Final Cluster Points-" , cluster.pointsandDistance
-    
-                      
-              
+            #print cluster.centroid
+            
+    index = 0
+    writer = csv.writer(open("result.csv", "w"))
+    for cluster in clusterList:
+        index = index + 1
+        for point in cluster.pointsandDistance.keys():
+            print 'Cluster_%s' % index , point
+            writer.writerow(['Cluster_%s' %index , point])      
+            
+        print "\n"    
+            
+                    
 #Generate Random Data First
 def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations):
     dataCollection = []
@@ -116,6 +127,7 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
     
     #Get three random Centriods
     initialCentroids = random.sample(dataCollection, numClusters)
+    #print initialCentroids
     
     #numClusters will automatically ensure that the size of ListofHashtableofDataPoints and initialCentroids is same.
     clusterList = []
@@ -129,10 +141,10 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
 def main():
     lowerBound = 1 #int (raw_input("Enter the lowerBound for DataGenerationN: \n"))
     upperBound = 2 #int (raw_input("Enter the upperBound for DataGenerationN: \n"))
-    maxPoints = 2 #int (raw_input("Enter the maxPoints for DataGenerationN:\n"))
+    maxPoints = 10 #int (raw_input("Enter the maxPoints for DataGenerationN:\n"))
     numClusters = 2 #int (raw_input("Enter the number of Clusters :\n")) 
-    threshold = 0.01
-    maxIterations = 2
+    threshold = 0.05
+    maxIterations = 200
     
     #Fire-Up our Working Code
     fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations)

@@ -1,6 +1,7 @@
 import random 
 import numpy as py
 import copy
+from numpy import matrix
 
 #KMean Serialized Algorithm 
 
@@ -8,16 +9,19 @@ import copy
 class Cluster: 
     # Centriod of that Cluster
     # HashTable containing a mapping between points and the distances 
-    def __init__(self, dataPoint, pointsandDistance = {}):
+    def __init__(self, dataPoint, pointsandDistance):
         self.centroid = dataPoint
         self.pointsandDistance = pointsandDistance
         
     def getCurrentCentroid(self):
         print "Current centroid for this cluster is - ", self.centroid  
+    
+    def __hash__(self):
+        return hash(self)
         
     def __repr__(self):
         return '%s %s' % (self.centroid, self.pointsandDistance)
-        
+'''        
 #This is a logical abstraction of a Point
 class DataPoint:
     #Method to initialize the Tuple (basically the Data Point) 
@@ -25,61 +29,86 @@ class DataPoint:
         self.tuple = tuple
     
     #Method to be able to print the Tuple 
-    '''Reference: http://stackoverflow.com/questions/1984162/purpose-of-pythons-repr'''
+    Reference: http://stackoverflow.com/questions/1984162/purpose-of-pythons-repr
     def __repr__(self):
         return '%s' % self.tuple
-    
     #def __eq__(self,other):
         #return self.tuple == other.tuple
-
+ '''
 #Calculate Eculedian Distance 
 def calculateEculedianDistance(centroid, datapoint):
-    return py.sqrt(sum((centroid - datapoint) ** 2))
-    
-    
+    #return py.sqrt(sum((py.array(centroid.tuple) - py.array(datapoint.tuple)) ** 2))
+    return py.sqrt(sum((py.array(centroid) - py.array(datapoint)) ** 2))
+
 def kMeansAlgo(clusterList, threshold, flag, Max_Iterations):
-    oldCentroids = py.array([Cluster(clusterList[i]).centroid for i in range(len(clusterList))])
-    newCentroids = py.array([Cluster(clusterList[i]).centroid for i in range(len(clusterList))])
+    newCentroids = py.array((Cluster(clusterList[i]).centroid) for i in range(len(clusterList)))
+    oldCentroids = py.array([])
     iterations = 0;
     
     while not shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
+        oldCentroids = newCentroids
         iterations += 1
-        for i in range(len(clusterList)):  # Iteration over the Cluster
-            currentCluster = Cluster (clusterList[i])
-            for index in range(len(currentCluster.pointsandDistance)):  # Iteration over each points in that Cluster Dictionary
-                distCurrentCluster = calculateEculedianDistance(currentCluster.centroid, currentCluster.pointsandDistance[index])
-                dict(currentCluster.pointsandDistance).update({currentCluster.pointsandDistance[index] : distCurrentCluster})
-                for j in range(i - 1, 0):  # Iterate over the previous List 
-                    prevCluster = Cluster(clusterList[j])
-                    prevHashTable = {}
-                    prevHashTable = prevCluster.pointsandDistance
-                    if(prevHashTable.has_key(prevCluster.pointsandDistance[index])):
-                        if(distCurrentCluster > prevHashTable.get(prevCluster.pointsandDistance[index]) and distCurrentCluster >= threshold):
-                            dict(currentCluster.pointsandDistance).pop(currentCluster.pointsandDistance[index])
-                            break
-                        elif(distCurrentCluster == prevHashTable.get(prevCluster.pointsandDistance[index])):
-                            dict(currentCluster.pointsandDistance).pop(currentCluster.pointsandDistance[index])
-                            break
-                        elif((distCurrentCluster > prevHashTable.get(prevCluster.pointsandDistance[index]) and distCurrentCluster <= threshold)
-                             or (distCurrentCluster < prevHashTable.get(prevCluster.pointsandDistance[index]))):
-                            dict(prevCluster.pointsandDistance).pop(prevCluster.pointsandDistance[index])
-    return True
-       
-                    
-                       
+        i=0
+    
+        for currentCluster in clusterList:  # Iteration over each of the Cluster
+            #currentCluster = clusterList[i]
+            i = i + 1
+            pointstoDeletefromCurrentCluster = []
+            for element in currentCluster.pointsandDistance:
+                #if(element != currentCluster.centroid):           
+                    distCurrentCluster = calculateEculedianDistance(currentCluster.centroid, element)
+                    currentCluster.pointsandDistance[element] = distCurrentCluster #Update Distance in HashTable
+                    if(i > 1):
+                        #print i
+                        for prevCluster in clusterList[::-1]: #Iterate over Previous Lists
+                            if(prevCluster.centroid == currentCluster.centroid):
+                                continue
+                            else:
+                                print "prev" , prevCluster.pointsandDistance
+                                print "curr" , currentCluster.pointsandDistance
+                                print "keyToSearchinPrev" , element
+                                if(dict(prevCluster.pointsandDistance).has_key(element)):
+                                    if(distCurrentCluster > dict(prevCluster.pointsandDistance).get(element) and distCurrentCluster >= threshold):
+                                        print "We are bigger"
+                                        pointstoDeletefromCurrentCluster.append(element)
+                                        break  
+                                    elif(distCurrentCluster == dict(prevCluster.pointsandDistance).get(element)):
+                                        print "We are equal"
+                                        pointstoDeletefromCurrentCluster.append(element)
+                                        break
+                                    elif((distCurrentCluster > dict(prevCluster.pointsandDistance).get(element) and distCurrentCluster <= threshold)
+                                         or (distCurrentCluster < dict(prevCluster.pointsandDistance).get(element))):
+                                        print "element is smaller or we are good within threshold"
+                                        print distCurrentCluster
+                                        print dict(prevCluster.pointsandDistance).get(element)
+                                        del prevCluster.pointsandDistance[element]
+                                        print prevCluster.pointsandDistance
+
+              
+            for item in pointstoDeletefromCurrentCluster:
+                del currentCluster.pointsandDistance[item]
+                
+            #print currentCluster.pointsandDistance
+            #currentCluster.centroid = py.mean(dict(currentCluster.pointsandDistance).keys(), axis = 0)
+            #newCentroids.append(currentCluster)
+                            
+    for cluster in clusterList:
+        print "Cluster-" , cluster.pointsandDistance
+    
+                  
 def shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
-    if iterations > Max_Iterations: return  True
-    return oldCentroids == newCentroids
+    if (iterations > Max_Iterations): 
+        return True
+    #return oldCentroids.__eq__(newCentroids)
     
               
-                        
-        
 #Generate Random Data 
-def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold):
+def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations):
     dataCollection = []
-    for i in range(1, maxPoints):
-        dataCollection.append(DataPoint([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
-        
+    for i in range(maxPoints):
+        dataCollection.append(tuple([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
+    
+    #print dataCollection
     #Creating Dictionaries for each of the Clusters. Since they need to operate on that    
     ListofHashtableofDataPoints = []
     
@@ -93,22 +122,24 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold):
     for i in range(numClusters):
         ListofHashtableofDataPoints.append(copy.deepcopy(tempHashTable));
          
-    print ListofHashtableofDataPoints
+    #print ListofHashtableofDataPoints
     
     #Get three random Centriods
     initialCentroids = random.sample(dataCollection, numClusters)
-    print initialCentroids
+    #print "Centroids:" , initialCentroids
     
     #numClusters will automatically ensure that the size of ListofHashtableofDataPoints and initialCentroids is same.
     clusterList = []
     for i in range(len(ListofHashtableofDataPoints)):
         clusterList.append(Cluster(initialCentroids[i], ListofHashtableofDataPoints[i]));
         
-    print clusterList
-
+    for c in clusterList:
+        print c
+    print "\n"
+        
     flag = True;
     #Calling the KMeans Algorithm
-    kMeansAlgo(clusterList, threshold, flag, 1000)
+    kMeansAlgo(clusterList, threshold, flag, maxIterations)
     
     '''
     # Experimental Code to Learn Python
@@ -130,11 +161,12 @@ def main():
     #numDimensions = int (raw_input("Enter number of Dimensions N:\n"))
     lowerBound = 1 #int (raw_input("Enter the lowerBound for DataGenerationN: \n"))
     upperBound = 2 #int (raw_input("Enter the upperBound for DataGenerationN: \n"))
-    maxPoints = 10 #int (raw_input("Enter the maxPoints for DataGenerationN:\n"))
-    numClusters = 3 #int (raw_input("Enter the number of Clusters :\n")) 
-    threshold = 0.2
+    maxPoints = 2 #int (raw_input("Enter the maxPoints for DataGenerationN:\n"))
+    numClusters = 2 #int (raw_input("Enter the number of Clusters :\n")) 
+    threshold = 0.01
+    maxIterations = 2
     
-    fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold)
+    fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations)
     
 if __name__ == "__main__":
     main()

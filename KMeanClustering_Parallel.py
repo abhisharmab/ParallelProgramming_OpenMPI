@@ -177,29 +177,50 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
                             
         del newCentroids[:]     
                        
-        xcordList =[]
-        ycordList =[]
-        numPoints =[]
-        finalnumPoints = 0
+        #xcordList =[]
+        #ycordList =[]
+        #numPoints = py.array(2)
+        finalnumPointsAddded = py.array([0])
+        finalxcordAdded = py.array([0.0])
+        finalycordAdded = py.array([0.0])
+        #py.insert(finalnumPoints, [0], axis = 0)
+        #print finalnumPoints
+        i = 0 
         for cluster in localclusterList:
-            #xcordList.append(sum([key[0] for key in cluster.pointsandDistance.keys()]))
-            #print "Machine_%d" %machineNumber, xcordList
-            #ycordList.append(sum([key[1] for key in cluster.pointsandDistance.keys()]))
-            #print "Machine_%d" %machineNumber, ycordList
-            numPoints.append(len(cluster.pointsandDistance))
+            if(i == 0):
+                xcordList = py.array([(sum([key[0] for key in cluster.pointsandDistance.keys()]))])
+                print "Machine_%d" %machineNumber, xcordList
             
-        print "Machine_%d" %machineNumber, numPoints[0]  
-        try:
+                ycordList = py.array([(sum([key[1] for key in cluster.pointsandDistance.keys()]))])
+                print "Machine_%d" %machineNumber, ycordList
+            
+                numPoints =  py.array([(len(cluster.pointsandDistance))])
+                print "Machine_%d" %machineNumber, numPoints 
+                
+                comm.Allreduce([numPoints, MPI.INT], [finalnumPointsAddded, MPI.INT], op=MPI.SUM);
+                print "Machine_%d" %machineNumber, finalnumPointsAddded
+                
+                comm.Allreduce([xcordList, MPI.DOUBLE], [finalxcordAdded, MPI.DOUBLE], op=MPI.SUM);
+                print "Machine_%d" %machineNumber, finalxcordAdded
+                
+                comm.Allreduce([ycordList, MPI.DOUBLE], [finalycordAdded, MPI.DOUBLE], op=MPI.SUM);
+                print "Machine_%d" %machineNumber, finalycordAdded
+                
+                i = i + 1
+            
+        #print "Machine_%d" %machineNumber, numPoints[0]  
+        '''try:
+            print "s"
             #comm.allreduce([xcordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
             #comm.allreduce([ycordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
-            comm.allreduce([numPoints[0], MPI.INT], None, op=MPI.SUM);
+            #comm.Allreduce([np.array(numPoints), MPI.INT], [finalnumPoints, MPI.INT], op=MPI.SUM);
 
             
             #print xcordList[0]
             #print ycordList[0]
-            print "Machine_%d" %machineNumber, numPoints[0]
+            #print "Machine_%d" %machineNumber, finalnumPoints
         except Exception:
-            print "MPI Communication Exception"
+            print "MPI Communication Exception"'''
             
     
        

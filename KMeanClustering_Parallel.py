@@ -8,7 +8,7 @@ import csv
 import sys
 import collections
 import itertools
-
+from itertools import chain
 
 comm = MPI.COMM_WORLD
 machineNumber = comm.Get_rank()
@@ -66,8 +66,8 @@ def initializeDistributedSystem(initialCentroids, maxIterations):
         #print "System Initializing. Please wait....."
         #Send the Data to Minions and Also Take Up Some Work
         slices = len(tempHashTable) / sizeofCluster
-        print "Total Slices" , slices
-        print "MaxIterations" , maxIterations
+        #print "Total Slices" , slices
+        #print "MaxIterations" , maxIterations
         localDataHashtable = dict(itertools.islice(tempHashTable.iteritems(), 0, slices)) #Slice the Dictionary
         #print localDataHashtable
         
@@ -76,7 +76,7 @@ def initializeDistributedSystem(initialCentroids, maxIterations):
         
         for i in range(len(initialCentroids)):
             localclusterList.append(Cluster(centroids[i], copy.deepcopy(localDataHashtable), maxIterations))
-        print "Boss Cluster" , localclusterList
+        #print "Boss Cluster" , localclusterList
       
         for i in range(1,sizeofCluster):
             minionData = collections.OrderedDict()
@@ -106,7 +106,7 @@ def initializeDistributedSystem(initialCentroids, maxIterations):
         for i in range(len(centroids)):
             localclusterList.append(Cluster(centroids[i], copy.deepcopy(localDataHashtable), maxIterations))
             
-        print "Minion Cluster- %d" %machineNumber , localclusterList
+        #print "Minion Cluster- %d" %machineNumber , localclusterList
         
         
 
@@ -177,64 +177,58 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
                             
         del newCentroids[:]     
                        
-        #xcordList =[]
-        #ycordList =[]
-        #numPoints = py.array(2)
         finalnumPointsAddded = py.array([0])
         finalxcordAdded = py.array([0.0])
         finalycordAdded = py.array([0.0])
-        #py.insert(finalnumPoints, [0], axis = 0)
-        #print finalnumPoints
-        i = 0 
+
         for cluster in localclusterList:
-            if(i == 0):
+            try:
                 xcordList = py.array([(sum([key[0] for key in cluster.pointsandDistance.keys()]))])
-                print "Machine_%d" %machineNumber, xcordList
+                #print "Machine_%d" %machineNumber, xcordList
             
                 ycordList = py.array([(sum([key[1] for key in cluster.pointsandDistance.keys()]))])
-                print "Machine_%d" %machineNumber, ycordList
+                #print "Machine_%d" %machineNumber, ycordList
             
                 numPoints =  py.array([(len(cluster.pointsandDistance))])
-                print "Machine_%d" %machineNumber, numPoints 
+                #print "Machine_%d" %machineNumber, numPoints 
                 
                 comm.Allreduce([numPoints, MPI.INT], [finalnumPointsAddded, MPI.INT], op=MPI.SUM);
-                print "Machine_%d" %machineNumber, finalnumPointsAddded
+                #print "Machine_%d" %machineNumber, finalnumPointsAddded
                 
                 comm.Allreduce([xcordList, MPI.DOUBLE], [finalxcordAdded, MPI.DOUBLE], op=MPI.SUM);
-                print "Machine_%d" %machineNumber, finalxcordAdded
+                #print "Machine_%d" %machineNumber, finalxcordAdded
                 
                 comm.Allreduce([ycordList, MPI.DOUBLE], [finalycordAdded, MPI.DOUBLE], op=MPI.SUM);
-                print "Machine_%d" %machineNumber, finalycordAdded
+                #print "Machine_%d" %machineNumber, finalycordAdded
                 
-                i = i + 1
-            
-        #print "Machine_%d" %machineNumber, numPoints[0]  
-        '''try:
-            print "s"
-            #comm.allreduce([xcordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
-            #comm.allreduce([ycordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
-            #comm.Allreduce([np.array(numPoints), MPI.INT], [finalnumPoints, MPI.INT], op=MPI.SUM);
+                x = (finalxcordAdded/finalnumPointsAddded)
+                y = (finalycordAdded/finalnumPointsAddded)
+                cluster.centroid = x[0], y[0]
+                newCentroids.append(cluster.centroid)
+                #print cluster.centroid
+                
+            except:
+                print "MPI Communication Exception"
 
+    for cluster in localclusterList:
+        if(comm.Get_rank() == 0): # You are ROOT you must aggregate all results
+            for i in range(1,sizeofCluster):
+                tempclusterHashTable = comm.recv(source=i, tag=12)
+                cluster.pointsandDistance = dict(chain.from_iterable(d.iteritems() for d in (cluster.pointsandDistance,tempclusterHashTable)))
+                
+        else: #You are slave and must send all information to Boss
+            comm.send(cluster.pointsandDistance, dest = 0, tag = 12) 
             
-            #print xcordList[0]
-            #print ycordList[0]
-            #print "Machine_%d" %machineNumber, finalnumPoints
-        except Exception:
-            print "MPI Communication Exception"'''
-            
-    
-       
-        '''x = 0    
-        if(x==0):   
-            print xcordList
-            print ycordList
-            print numPoints
-            x = x + 1'''
+    if(comm.Get_rank() == 0):
+        index = 0    
+        for cluster in localclusterList:
+            index = index + 1
+            for point in cluster.pointsandDistance.keys():
+                print 'Cluster_%s' % index , point
+                
         
-        sys.exit(0)
-        #print oldCentroids
-        #print newCentroids'''
-
+    
+    sys.exit(0)
 
 
 '''Fire_Up Function'''
@@ -243,6 +237,7 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
     dataCollection = []
     for i in range(maxPoints):
         dataCollection.append(tuple([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
+    print dataCollection
     
     #Created a HashTable with the Points and Distance set to ZERO
     for i in range(len(dataCollection)):
@@ -252,6 +247,7 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
     #Get three random Centriods
     initialCentroids = random.sample(dataCollection, numClusters)
     return initialCentroids
+
 
 '''Main Function for User_Input'''
 def main():

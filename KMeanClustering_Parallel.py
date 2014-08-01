@@ -221,7 +221,7 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
             
     if(comm.Get_rank() == 0):
         index = 0    
-        writer = csv.writer(open("result.csv", "w"))
+        writer = csv.writer(open("KMean_Parallel_Result.csv", "w"))
         for cluster in localclusterList:
             index = index + 1
             for point in cluster.pointsandDistance.keys():

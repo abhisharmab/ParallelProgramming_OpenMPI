@@ -106,7 +106,7 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
         #print newCentroids
             
     index = 0
-    writer = csv.writer(open("result.csv", "w"))
+    writer = csv.writer(open("KMean_Serial_Result.csv", "w"))
     for cluster in clusterList:
         index = index + 1
         for point in cluster.pointsandDistance.keys():

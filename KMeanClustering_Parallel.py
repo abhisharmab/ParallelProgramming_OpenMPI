@@ -175,12 +175,38 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
             for item in pointstoDeletefromCurrentCluster:
                 del currentCluster.pointsandDistance[item]
                             
-        del newCentroids[:]                    
+        del newCentroids[:]     
+                       
+        xcordList =[]
+        ycordList =[]
+        numPoints =[]
+        for cluster in localclusterList:
+            xcordList.append(sum([key[0] for key in cluster.pointsandDistance.keys()]))
+            ycordList.append(sum([key[1] for key in cluster.pointsandDistance.keys()]))
+            numPoints.append(len(cluster.pointsandDistance))
+            
+        try:
+            comm.allreduce([xcordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
+            comm.allreduce([ycordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
+            comm.allreduce([numPoints,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
+
+            
+            print xcordList[0]
+            print ycordList[0]
+            print numPoints[0]
+        except Exception:
+            print "MPI Communication Exception"
+            
+    
+       
+        '''x = 0    
+        if(x==0):   
+            print xcordList
+            print ycordList
+            print numPoints
+            x = x + 1'''
         
-        '''for cluster in localclusterList:
-            cluster.centroid = tuple(map(mean, zip(*cluster.pointsandDistance.keys())))
-            newCentroids.append(copy.deepcopy(cluster.centroid))'''
-        
+        sys.exit(0)
         #print oldCentroids
         #print newCentroids'''
 

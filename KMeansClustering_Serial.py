@@ -123,7 +123,7 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
             
         print "\n"    
         
-    print "Done!!! All information pushed to a CSV file in the same directory"         
+    print "Done!!! All information pushed to a KMean_Serial_Result.csv file in the same directory"         
                     
 #Generate Random Data First
 def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations):
@@ -158,12 +158,12 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
 def main():
     while True:
         try:
-            lowerBound = 1 #int (raw_input("Enter the lowerBound for DataGeneration (Integer only):"))
-            upperBound = 3 #int (raw_input("Enter the upperBound for DataGeneration (Integer only):\n"))
-            maxPoints = 1000 #int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
-            numClusters = 10 #int (raw_input("Enter the number of Clusters (Integer only):\n")) 
-            threshold = 0.2 #float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
-            maxIterations = 2000 #int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
+            lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only):"))
+            upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only):\n"))
+            maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
+            numClusters = int (raw_input("Enter the number of Clusters (Integer only):\n")) 
+            threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
+            maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
             break
         
         except ValueError:

@@ -4,6 +4,8 @@ import copy
 from numpy import matrix
 from numpy import mean
 import csv
+import sys
+import time 
 
 #KMean Serialized Algorithm 
 tempHashTable = {} #This dictionary holds all the Generated Points
@@ -41,7 +43,9 @@ def shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
 
 
 def kMeansAlgo(clusterList, threshold, Max_Iterations):
-    
+
+    start_time = time.time()
+        
     #Initialize things we need for Algos
     newCentroids = []
     for cluster in clusterList:
@@ -123,6 +127,7 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
             
         print "\n"    
         
+    print("Program ran for -- %d seconds --" % (time.time() - start_time))
     print "Done!!! All information pushed to a KMean_Serial_Result.csv file in the same directory"         
                     
 #Generate Random Data First
@@ -158,17 +163,17 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
 def main():
     while True:
         try:
-            lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only):"))
-            upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only):\n"))
-            maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
-            numClusters = int (raw_input("Enter the number of Clusters (Integer only):\n")) 
-            threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
-            maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
+            lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only.Example = 1):"))
+            upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only. Example = 2):\n"))
+            maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only. Example = 10000):\n"))
+            numClusters = int (raw_input("Enter the number of Clusters (Integer only. Example = 5):\n")) 
+            threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float) . Example = 0.2):\n"))
+            maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only). Example = 300):\n"))
             break
         
         except ValueError:
             print "Oops! Invalid Entry. Please follow instructions carefully. Try again..\n"
-    
+
     #Fire-Up our Working Code
     fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations)
     

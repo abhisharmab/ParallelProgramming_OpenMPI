@@ -221,12 +221,15 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
             
     if(comm.Get_rank() == 0):
         index = 0    
+        writer = csv.writer(open("result.csv", "w"))
         for cluster in localclusterList:
             index = index + 1
             for point in cluster.pointsandDistance.keys():
                 print 'Cluster_%s' % index , point
-                
+                writer.writerow(['Cluster_%s' %index , point]) 
+            print "\n"    
         
+        print "Done!!! All information pushed to a CSV file in the same directory"          
     
     sys.exit(0)
 
@@ -237,7 +240,7 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
     dataCollection = []
     for i in range(maxPoints):
         dataCollection.append(tuple([(py.random.uniform(lowerBound,upperBound)) for j in range(2)])) #2D points
-    print dataCollection
+    #print dataCollection
     
     #Created a HashTable with the Points and Distance set to ZERO
     for i in range(len(dataCollection)):

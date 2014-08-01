@@ -180,20 +180,24 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
         xcordList =[]
         ycordList =[]
         numPoints =[]
+        finalnumPoints = 0
         for cluster in localclusterList:
-            xcordList.append(sum([key[0] for key in cluster.pointsandDistance.keys()]))
-            ycordList.append(sum([key[1] for key in cluster.pointsandDistance.keys()]))
+            #xcordList.append(sum([key[0] for key in cluster.pointsandDistance.keys()]))
+            #print "Machine_%d" %machineNumber, xcordList
+            #ycordList.append(sum([key[1] for key in cluster.pointsandDistance.keys()]))
+            #print "Machine_%d" %machineNumber, ycordList
             numPoints.append(len(cluster.pointsandDistance))
             
+        print "Machine_%d" %machineNumber, numPoints[0]  
         try:
-            comm.allreduce([xcordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
-            comm.allreduce([ycordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
-            comm.allreduce([numPoints,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
+            #comm.allreduce([xcordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
+            #comm.allreduce([ycordList,MPI.DOUBLE], [len(localclusterList),MPI.DOUBLE], op=MPI.SUM);
+            comm.allreduce([numPoints[0], MPI.INT], None, op=MPI.SUM);
 
             
-            print xcordList[0]
-            print ycordList[0]
-            print numPoints[0]
+            #print xcordList[0]
+            #print ycordList[0]
+            print "Machine_%d" %machineNumber, numPoints[0]
         except Exception:
             print "MPI Communication Exception"
             

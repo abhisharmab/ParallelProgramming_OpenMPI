@@ -106,7 +106,7 @@ def initializeDistributedSystem(initialCentroids, maxIterations):
         
         for i in range(len(centroids)):
             localclusterList.append(Cluster(centroids[i], copy.deepcopy(localDataHashtable), maxIterations))
-        #print "Minion Cluster- %d" %machineNumber , localclusterList
+        print "Minion Node- %d on %s has Received Data and Processing...." % (machineNumber, nameofMachine)
         
         
 
@@ -224,20 +224,23 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
                 cluster.pointsandDistance = dict(chain.from_iterable(d.iteritems() for d in (cluster.pointsandDistance,tempclusterHashTable)))
                 
         else: #You are slave and must send all information to Boss
-            comm.send(cluster.pointsandDistance, dest = 0, tag = 12) 
-            
+            comm.send(cluster.pointsandDistance, dest = 0, tag = 12)
+             
+        
     if(comm.Get_rank() == 0):
+        print "\n" 
+        print("Program ran for -- %d seconds -- Done!!!" % (time.time() - start_time))
         index = 0    
         writer = csv.writer(open("KMean_Parallel_Result.csv", "w"))
         for cluster in localclusterList:
             index = index + 1
             for point in cluster.pointsandDistance.keys():
-                print 'Cluster_%s' % index , point
+                #print 'Cluster_%s' % index , point
                 writer.writerow(['Cluster_%s' %index , point]) 
-            print "\n"    
-            
-        print("Program ran for -- %d seconds --" % (time.time() - start_time))
-        print "Done!!! All information pushed to a KMean_Parallel_Result.csv file in the same directory"          
+              
+        
+        print ""
+        print "All information pushed to: KMean_Parallel_Result.csv file in the same directory\n"          
     
     sys.exit(0)
 
@@ -267,13 +270,14 @@ def main():
     if(comm.Get_rank() == 0):
         while True:
             try:
-                #print "I am boss %d of %d on %s" % (machineNumber, sizeofCluster, nameofMachine)
-                lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only): \n"))
-                upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only): \n"))
-                maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
-                numClusters = int (raw_input("Enter the number of Clusters (Integer only):\n")) 
-                threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
-                maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
+                print "\nMaster %d of %d nodes running on %s \n" % (machineNumber, sizeofCluster, nameofMachine)
+                lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only.Example = 1):\n"))
+                upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only. Example = 2):\n"))
+                maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only. Example = 10000):\n"))
+                numClusters = int (raw_input("Enter the number of Clusters (Integer only. Example = 5):\n")) 
+                threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float) . Example = 0.2):\n"))
+                maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only). Example = 300):\n"))
+                print "\n"
                 break
         
             except ValueError:

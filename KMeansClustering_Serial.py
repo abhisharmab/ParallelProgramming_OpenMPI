@@ -116,19 +116,19 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
         
         #print oldCentroids
         #print newCentroids
-            
+    
+    print("Program ran for -- %d seconds -- Done!!!" % (time.time() - start_time))        
     index = 0
     writer = csv.writer(open("KMean_Serial_Result.csv", "w"))
     for cluster in clusterList:
         index = index + 1
         for point in cluster.pointsandDistance.keys():
-            print 'Cluster_%s' % index , point
+            #print 'Cluster_%s' % index , point
             writer.writerow(['Cluster_%s' %index , point])      
             
-        print "\n"    
-        
-    print("Program ran for -- %d seconds --" % (time.time() - start_time))
-    print "Done!!! All information pushed to a KMean_Serial_Result.csv file in the same directory"         
+    
+    print ""
+    print "All information pushed to: KMean_Serial_Result.csv file in the same directory\n"         
                     
 #Generate Random Data First
 def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations):
@@ -163,12 +163,14 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
 def main():
     while True:
         try:
-            lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only.Example = 1):"))
+            print "\n"
+            lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only.Example = 1):\n"))
             upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only. Example = 2):\n"))
             maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only. Example = 10000):\n"))
             numClusters = int (raw_input("Enter the number of Clusters (Integer only. Example = 5):\n")) 
             threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float) . Example = 0.2):\n"))
             maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only). Example = 300):\n"))
+            print "Processing......\n"
             break
         
         except ValueError:

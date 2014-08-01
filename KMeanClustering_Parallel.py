@@ -105,7 +105,6 @@ def initializeDistributedSystem(initialCentroids, maxIterations):
         
         for i in range(len(centroids)):
             localclusterList.append(Cluster(centroids[i], copy.deepcopy(localDataHashtable), maxIterations))
-            
         #print "Minion Cluster- %d" %machineNumber , localclusterList
         
         
@@ -115,6 +114,7 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
     
     initialCentroids = initialCentroids
     initializeDistributedSystem(initialCentroids, maxIterations)
+    
     comm.barrier() #Waiting for everyone to sync-up
     
     localDataHashtable = copy.deepcopy(localclusterList[0].pointsandDistance)
@@ -181,6 +181,7 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
         finalxcordAdded = py.array([0.0])
         finalycordAdded = py.array([0.0])
 
+        i = 0        
         for cluster in localclusterList:
             try:
                 xcordList = py.array([(sum([key[0] for key in cluster.pointsandDistance.keys()]))])
@@ -201,12 +202,16 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
                 comm.Allreduce([ycordList, MPI.DOUBLE], [finalycordAdded, MPI.DOUBLE], op=MPI.SUM);
                 #print "Machine_%d" %machineNumber, finalycordAdded
                 
-                x = (finalxcordAdded/finalnumPointsAddded)
-                y = (finalycordAdded/finalnumPointsAddded)
-                cluster.centroid = x[0], y[0]
+                if(finalnumPointsAddded != 0):
+                    x = (finalxcordAdded/finalnumPointsAddded)
+                    y = (finalycordAdded/finalnumPointsAddded)
+                    cluster.centroid = x[0], y[0]
+                else:
+                    cluster.centroid = 0,0
+                
                 newCentroids.append(cluster.centroid)
                 #print cluster.centroid
-                
+                i = i + 1
             except:
                 print "MPI Communication Exception"
 
@@ -262,8 +267,8 @@ def main():
                 #print "I am boss %d of %d on %s" % (machineNumber, sizeofCluster, nameofMachine)
                 lowerBound = 1 #int (raw_input("Enter the lowerBound for DataGeneration (Integer only): \n"))
                 upperBound = 2 #int (raw_input("Enter the upperBound for DataGeneration (Integer only): \n"))
-                maxPoints = 6 #int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
-                numClusters = 2 #int (raw_input("Enter the number of Clusters (Integer only):\n")) 
+                maxPoints = 10 #int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
+                numClusters = 3 #int (raw_input("Enter the number of Clusters (Integer only):\n")) 
                 threshold = 0.2 #float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
                 maxIterations = 20 #int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
                 break

@@ -61,12 +61,15 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
     
         for cluster in clusterList:
             cluster.pointsandDistance = copy.deepcopy(tempHashTable)
+            #print cluster.pointsandDistance
             
         for currentCluster in clusterList:  # Iteration over each of the Cluster
             i = i + 1
             pointstoDeletefromCurrentCluster = []
             for element in currentCluster.pointsandDistance:
-                #if(element != currentCluster.centroid):           
+                #if(element != currentCluster.centroid):       
+                    #print "Element- " , element    
+                    #print "Centroid- ", currentCluster.centroid
                     distCurrentCluster = calculateEculedianDistance(currentCluster.centroid, element)
                     currentCluster.pointsandDistance[element] = distCurrentCluster #Update Distance in HashTable
                     if(i > 1):
@@ -99,7 +102,12 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
                             
         del newCentroids[:]                    
         for cluster in clusterList:
-            cluster.centroid = tuple(map(mean, zip(*cluster.pointsandDistance.keys())))
+            answer = tuple(map(mean, zip(*cluster.pointsandDistance.keys())))
+            if not answer: 
+                cluster.centroid = 0,0
+                print cluster.centroid
+            else:
+                cluster.centroid = tuple(map(mean, zip(*cluster.pointsandDistance.keys())))
             newCentroids.append(copy.deepcopy(cluster.centroid))
         
         #print oldCentroids
@@ -150,12 +158,12 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
 def main():
     while True:
         try:
-            lowerBound = int (raw_input("Enter the lowerBound for DataGeneration (Integer only): \n"))
-            upperBound = int (raw_input("Enter the upperBound for DataGeneration (Integer only): \n"))
-            maxPoints = int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
-            numClusters = int (raw_input("Enter the number of Clusters (Integer only):\n")) 
-            threshold = float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
-            maxIterations = int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
+            lowerBound = 1 #int (raw_input("Enter the lowerBound for DataGeneration (Integer only):"))
+            upperBound = 3 #int (raw_input("Enter the upperBound for DataGeneration (Integer only):\n"))
+            maxPoints = 1000 #int (raw_input("Enter the maxPoints for DataGeneration (Integer only):\n"))
+            numClusters = 10 #int (raw_input("Enter the number of Clusters (Integer only):\n")) 
+            threshold = 0.2 #float (raw_input("Enter the distance you are ready to accept as threshold from centroid (Integer or Float):\n"))
+            maxIterations = 2000 #int (raw_input("Enter the maximum iterations you want to allow (Integer only):\n"))
             break
         
         except ValueError:

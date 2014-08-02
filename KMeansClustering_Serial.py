@@ -1,3 +1,4 @@
+#This is Serial KMeans Program for 2D Points 
 import random 
 import numpy as py
 import copy
@@ -8,7 +9,8 @@ import sys
 import time 
 
 #KMean Serialized Algorithm 
-tempHashTable = {} #This dictionary holds all the Generated Points
+tempHashTable = {} 
+#This dictionary holds all the Randomly Generated Points
 
 
 #This is a logical abstraction of Cluster.
@@ -16,12 +18,13 @@ class Cluster:
     # Centriod of that Cluster
     # HashTable containing a mapping between points and the distances 
     def __init__(self, dataPoint, pointsandDistance):
-        self.centroid = dataPoint
-        self.pointsandDistance = pointsandDistance
+        self.centroid = dataPoint #Centroid 
+        self.pointsandDistance = pointsandDistance #Dictionary containing chunk of the file
 
     def getCurrentCentroid(self):
         print "Current centroid for this cluster is - ", self.centroid  
-    
+        #Print the Centroid
+
     def __hash__(self):
         return hash(self)
         
@@ -30,18 +33,21 @@ class Cluster:
 
 
 #Calculate Eculedian Distance 
+#This functions calculates the Eculedian Distance
 def calculateEculedianDistance(centroid, datapoint):
     return py.sqrt(sum((py.array(centroid) - py.array(datapoint)) ** 2))
 
 
+#Check if we should stop the iterations 
+#1. Check if we have exceeded the iterations 
+#2. Or the Old and New Centroids are same implying - Centroids have not changed
 def shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
     if (iterations > Max_Iterations): 
         return True
-    #print oldCentroids 
-    #print newCentroids
     return oldCentroids.__eq__(newCentroids)
 
 
+#This is the actual KMEANS Parallel Algorithm
 def kMeansAlgo(clusterList, threshold, Max_Iterations):
 
     start_time = time.time()
@@ -51,7 +57,7 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
     for cluster in clusterList:
         newCentroids.append(copy.deepcopy(cluster.centroid))
         
-    #print "NewCentroids at beginning" , newCentroids
+    
     oldCentroids = [] 
     iterations = 0;
     
@@ -60,31 +66,22 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
         oldCentroids = copy.deepcopy(newCentroids)
         iterations += 1
         i=0
-        #if(i==0):
-            #print "OldCentroids at beginning" , oldCentroids
-    
+
+        #Run the code for each Cluster
         for cluster in clusterList:
             cluster.pointsandDistance = copy.deepcopy(tempHashTable)
-            #print cluster.pointsandDistance
             
         for currentCluster in clusterList:  # Iteration over each of the Cluster
             i = i + 1
             pointstoDeletefromCurrentCluster = []
             for element in currentCluster.pointsandDistance:
-                #if(element != currentCluster.centroid):       
-                    #print "Element- " , element    
-                    #print "Centroid- ", currentCluster.centroid
                     distCurrentCluster = calculateEculedianDistance(currentCluster.centroid, element)
                     currentCluster.pointsandDistance[element] = distCurrentCluster #Update Distance in HashTable
                     if(i > 1):
-                        #print i
                         for prevCluster in clusterList[::-1]: #Iterate over Previous Lists
                             if(prevCluster.centroid == currentCluster.centroid):
                                 continue
                             else:
-                                #print "prev" , prevCluster.centroid, prevCluster.pointsandDistance
-                                #print "curr" , currentCluster.centroid, currentCluster.pointsandDistance
-                                #print "keyToSearchinPrev" , element
                                 if(prevCluster.pointsandDistance.has_key(element)):
                                     if(distCurrentCluster > prevCluster.pointsandDistance.get(element) and distCurrentCluster >= threshold):
                                         #print "We are futher"
@@ -97,8 +94,6 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
                                     elif((distCurrentCluster > prevCluster.pointsandDistance.get(element) and distCurrentCluster <= threshold)
                                          or (distCurrentCluster < prevCluster.pointsandDistance.get(element))):
                                         #print "We are nearer or well within our threshold_limit"
-                                        #print distCurrentCluster
-                                        #print prevCluster.pointsandDistance[element]
                                         del prevCluster.pointsandDistance[element]
                                         
             for item in pointstoDeletefromCurrentCluster:
@@ -106,16 +101,14 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
                             
         del newCentroids[:]                    
         for cluster in clusterList:
+            #Calcualte the Mean to get the new Centroid
             answer = tuple(map(mean, zip(*cluster.pointsandDistance.keys())))
             if not answer: 
                 cluster.centroid = 0,0
-                print cluster.centroid
             else:
                 cluster.centroid = tuple(map(mean, zip(*cluster.pointsandDistance.keys())))
             newCentroids.append(copy.deepcopy(cluster.centroid))
-        
-        #print oldCentroids
-        #print newCentroids
+
     
     print("Program ran for -- %d seconds -- Done!!!" % (time.time() - start_time))        
     index = 0
@@ -130,7 +123,10 @@ def kMeansAlgo(clusterList, threshold, Max_Iterations):
     print ""
     print "All information pushed to: KMean_Serial_Result.csv file in the same directory\n"         
                     
-#Generate Random Data First
+                    
+                    
+                    
+#Initialze Setup for Running the Code
 def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterations):
     dataCollection = []
     for i in range(maxPoints):
@@ -149,7 +145,7 @@ def fireUp(lowerBound, upperBound, maxPoints, numClusters, threshold, maxIterati
     
     #Get three random Centriods
     initialCentroids = random.sample(dataCollection, numClusters)
-    #print initialCentroids
+
     
     #numClusters will automatically ensure that the size of ListofHashtableofDataPoints and initialCentroids is same.
     clusterList = []

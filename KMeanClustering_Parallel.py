@@ -1,3 +1,4 @@
+#This is Parallel KMeans Program for 2D Points 
 from mpi4py import MPI 
 import random 
 import numpy as py
@@ -11,35 +12,38 @@ import itertools
 from itertools import chain
 import time 
 
+#Initialize the the MPI Related Variables 
 comm = MPI.COMM_WORLD
 machineNumber = comm.Get_rank()
 sizeofCluster = comm.Get_size()
 nameofMachine = MPI.Get_processor_name()
 MPI_GOD = 0
 
-#Stuff Everyone Needs to Know about is Here
-tempHashTable = collections.OrderedDict() #HashTable that has all points and distances initialized to zero.
+#Stuff that methods  Needs to Know about is Here
+#HashTable that has all points and distances initialized to zero.
+tempHashTable = collections.OrderedDict() #This is actually a HashTable of all the points
 maxPoints = 0
 numClusters = 0
 maxIterations = 0
 threshold = 0
 initialCentroids=[]
 localclusterList=[]
-#localDataHashtable={}
-globalclusterList=[] #Maybe we might need this
+
 
 
 #This is a logical abstraction of Cluster.
+#This contains the Centroid, A Dictionary of all the points given to this Machine, And Maximum Iterations Allowed
 class Cluster: 
     # Centriod of that Cluster
     # HashTable containing a mapping between points and the distances 
     def __init__(self, dataPoint, pointsandDistance, maxIterations):
-        self.centroid = dataPoint
-        self.pointsandDistance = pointsandDistance
-        self.maxIterations = maxIterations
+        self.centroid = dataPoint #Centroid 
+        self.pointsandDistance = pointsandDistance #Dictionary containing chunk of the file
+        self.maxIterations = maxIterations #Iterations
 
     def getCurrentCentroid(self):
         print "Current centroid for this cluster is - ", self.centroid  
+        #Print the Centroid
     
     def __hash__(self):
         return hash(self)
@@ -49,56 +53,58 @@ class Cluster:
 
 
 #Calculate Eculedian Distance 
+#This functions calculates the Eculedian Distance
 def calculateEculedianDistance(centroid, datapoint):
     return py.sqrt(sum((py.array(centroid) - py.array(datapoint)) ** 2))
 
 
+#Check if we should stop the iterations 
+#1. Check if we have exceeded the iterations 
+#2. Or the Old and New Centroids are same implying - Centroids have not changed
 def shouldNotStop(oldCentroids, newCentroids, iterations, Max_Iterations):
     if (iterations > Max_Iterations): 
         return True
-    #print oldCentroids 
-    #print newCentroids
     return oldCentroids.__eq__(newCentroids)
 
 
+#This fucntions initiales the Distributed System 
+#Breaks the Data into chunks and sends it across to all the Machines 
 '''System Initialization'''
 def initializeDistributedSystem(initialCentroids, maxIterations):
-    if(comm.Get_rank() == 0):
-        #print "System Initializing. Please wait....."
+    if(comm.Get_rank() == 0): #Rank =0 implies MASTER NODE
         #Send the Data to Minions and Also Take Up Some Work
         slices = len(tempHashTable) / sizeofCluster
-        #print "Total Slices" , slices
-        #print "MaxIterations" , maxIterations
+        
         localDataHashtable = dict(itertools.islice(tempHashTable.iteritems(), 0, slices)) #Slice the Dictionary
-        #print localDataHashtable
         
         #Make local copy of those centroids
         centroids = initialCentroids
         
         for i in range(len(initialCentroids)):
             localclusterList.append(Cluster(centroids[i], copy.deepcopy(localDataHashtable), maxIterations))
-        #print "Boss Cluster" , localclusterList
+        
       
-        for i in range(1,sizeofCluster):
+        for i in range(1,sizeofCluster): #Make as many chunks as the number of Clusters
             minionData = collections.OrderedDict()
             
             if(i < sizeofCluster - 1):
                 minionData = dict(itertools.islice(tempHashTable.iteritems(), slices * i , slices * (i + 1)))
-                #print minionData
+                
             else:
                 minionData = dict(itertools.islice(tempHashTable.iteritems(), slices * i , len(tempHashTable)))
-                #print minionData
+                
                 
             try:
-                comm.send(minionData, dest=i, tag=11)
-                comm.send(centroids, dest=i, tag=11)
-                comm.send(maxIterations, dest=i, tag=11)
+                comm.send(minionData, dest=i, tag=11) #Send the Data Chunks
+                comm.send(centroids, dest=i, tag=11)  #Send the Centroids 
+                comm.send(maxIterations, dest=i, tag=11) #Send the MaxIterations we should run
+
             except Exception:
                 print "We got exception due to MPI. Following is the error: \n"
                 print str(Exception.message)
                 sys.exit(0)
                 
-    else:
+    else: #These are Minions doing the work.
         #Receive the Data From Master
         localDataHashtable = comm.recv(source=0, tag=11)
         centroids = comm.recv(source=0, tag=11)
@@ -110,6 +116,7 @@ def initializeDistributedSystem(initialCentroids, maxIterations):
         
         
 
+#This is the actual KMEANS Parallel Algorithms 
 '''K-MEANS Parallel Algorithm'''
 def kMeansParallelAlgo(initialCentroids, maxIterations):
     if(comm.Get_rank() == 0):
@@ -118,17 +125,17 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
     initialCentroids = initialCentroids
     initializeDistributedSystem(initialCentroids, maxIterations)
     
-    comm.barrier() #Waiting for everyone to sync-up
+    comm.barrier() #Waiting for everyone to sync-up until this point 
     
     localDataHashtable = copy.deepcopy(localclusterList[0].pointsandDistance)
-    #print localDataHashtable
     
-    #Initialize things we need for Algos
+    
+    #Initialize things we need for the Algorithm
     newCentroids = []
     for cluster in localclusterList:
         newCentroids.append(copy.deepcopy(cluster.centroid))
         
-    #print "NewCentroids at beginning" , newCentroids
+    
     oldCentroids = [] 
     iterations = 0;
     
@@ -137,31 +144,27 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
         oldCentroids = copy.deepcopy(newCentroids)
         iterations += 1
         i=0
-        #if(i==0):
-            #print "OldCentroids at beginning" , oldCentroids
     
-        for cluster in localclusterList:
+        #Run the code for each Cluster
+        for cluster in localclusterList: 
             cluster.pointsandDistance = copy.deepcopy(localDataHashtable)
             
         for currentCluster in localclusterList:  # Iteration over each of the Cluster
             i = i + 1
             pointstoDeletefromCurrentCluster = []
             for element in currentCluster.pointsandDistance:
-                #if(element != currentCluster.centroid):           
                     distCurrentCluster = calculateEculedianDistance(currentCluster.centroid, element)
                     currentCluster.pointsandDistance[element] = distCurrentCluster #Update Distance in HashTable
                     if(i > 1):
-                        #print i
+                        #Check the previous Clusters. Maybe the point is closer to other Cluster 
                         for prevCluster in localclusterList[::-1]: #Iterate over Previous Lists
                             if(prevCluster.centroid == currentCluster.centroid):
                                 continue
                             else:
-                                #print "prev" , prevCluster.centroid, prevCluster.pointsandDistance
-                                #print "curr" , currentCluster.centroid, currentCluster.pointsandDistance
-                                #print "keyToSearchinPrev" , element
+
                                 if(prevCluster.pointsandDistance.has_key(element)):
                                     if(distCurrentCluster > prevCluster.pointsandDistance.get(element) and distCurrentCluster >= threshold):
-                                        #print "We are futher"
+                                        #print "We are futher away"
                                         pointstoDeletefromCurrentCluster.append(element)
                                         break  
                                     elif(distCurrentCluster == prevCluster.pointsandDistance.get(element)):
@@ -171,8 +174,6 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
                                     elif((distCurrentCluster > prevCluster.pointsandDistance.get(element) and distCurrentCluster <= threshold)
                                          or (distCurrentCluster < prevCluster.pointsandDistance.get(element))):
                                         #print "We are nearer or well within our threshold_limit"
-                                        #print distCurrentCluster
-                                        #print prevCluster.pointsandDistance[element]
                                         del prevCluster.pointsandDistance[element]
                                         
             for item in pointstoDeletefromCurrentCluster:
@@ -187,32 +188,33 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
         for cluster in localclusterList:
             try:
                 xcordList = py.array([(sum([key[0] for key in cluster.pointsandDistance.keys()]))])
-                #print "Machine_%d" %machineNumber, xcordList
+                #Add up all the x-coordinates
             
                 ycordList = py.array([(sum([key[1] for key in cluster.pointsandDistance.keys()]))])
-                #print "Machine_%d" %machineNumber, ycordList
+                #Add up all the y-cordinates
             
                 numPoints =  py.array([(len(cluster.pointsandDistance))])
-                #print "Machine_%d" %machineNumber, numPoints 
+                #The total points in that local cluster
                 
                 comm.Allreduce([numPoints, MPI.INT], [finalnumPointsAddded, MPI.INT], op=MPI.SUM);
-                #print "Machine_%d" %machineNumber, finalnumPointsAddded
+                #Add all the X-coordinates across all nodes
                 
                 comm.Allreduce([xcordList, MPI.DOUBLE], [finalxcordAdded, MPI.DOUBLE], op=MPI.SUM);
-                #print "Machine_%d" %machineNumber, finalxcordAdded
+                #Add all the Y-coordinates across all nodes
                 
                 comm.Allreduce([ycordList, MPI.DOUBLE], [finalycordAdded, MPI.DOUBLE], op=MPI.SUM);
-                #print "Machine_%d" %machineNumber, finalycordAdded
+                #Get the total points
                 
                 if(finalnumPointsAddded != 0):
                     x = (finalxcordAdded/finalnumPointsAddded)
                     y = (finalycordAdded/finalnumPointsAddded)
                     cluster.centroid = x[0], y[0]
                 else:
-                    cluster.centroid = 0,0
+                    cluster.centroid = 0,0 #If no points remain in cluster then set to zero
                 
+                #Updates New Centroid 
                 newCentroids.append(cluster.centroid)
-                #print cluster.centroid
+                
                 
             except:
                 print "MPI Communication Exception"
@@ -235,8 +237,8 @@ def kMeansParallelAlgo(initialCentroids, maxIterations):
         for cluster in localclusterList:
             index = index + 1
             for point in cluster.pointsandDistance.keys():
-                #print 'Cluster_%s' % index , point
                 writer.writerow(['Cluster_%s' %index , point]) 
+                #Write Data to Excel File
               
         
         print ""
